@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+
+@theme {
+  /* ZURK color system — black-first command center aesthetic */
+  --color-zurk-900: #05060a;
+  --color-zurk-800: #0b0f16;
+  --color-zurk-700: #131824;
+  --color-zurk-600: #1c2433;
+  --color-zurk-500: #5f6c7f;
+  --color-zurk-400: #8e99aa;
+  --color-zurk-300: #b9c3cf;
+  --color-zurk-200: #d7dde6;
+  --color-zurk-100: #e6ebf0;
+  --color-zurk-50: #f7f9fb;
+
+  /* Accent — clean white */
+  --color-accent-500: #f1f5f9;
+  --color-accent-400: #e2e8f0;
+  --color-accent-600: #ffffff;
+
+  /* Status colors */
+  --color-status-running: #22c55e;
+  --color-status-idle: #94a3b8;
+  --color-status-waiting: #f59e0b;
+  --color-status-error: #ef4444;
+  --color-status-completed: #e2e8f0;
+
+  /* Syntax highlighting — for terminal-style rich text */
+  --color-syntax-blue: #60a5fa;
+  --color-syntax-green: #4ade80;
+  --color-syntax-yellow: #fbbf24;
+  --color-syntax-red: #f87171;
+  --color-syntax-purple: #c084fc;
+  --color-syntax-cyan: #22d3ee;
+  --color-syntax-orange: #fb923c;
+
+  /* Fonts */
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Sidebar width */
+  --spacing-sidebar: 16rem;
+}
+
+/* Base styles */
+html {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-zurk-900 text-zurk-100 font-sans antialiased;
+  min-height: 100dvh;
+  font-weight: 300;
+  background-image:
+    radial-gradient(1000px 600px at 80% -10%, rgba(241, 245, 249, 0.06), transparent 60%),
+    radial-gradient(800px 500px at 0% 0%, rgba(148, 163, 184, 0.05), transparent 55%);
+}
+
+a,
+button,
+input,
+textarea {
+  transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease,
+    box-shadow 150ms ease, transform 150ms ease;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zurk-500 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-zurk-400;
+}
+
+/* Selection */
+::selection {
+  @apply bg-accent-500/20 text-zurk-50;
+}
+
+/* Toast slide-up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Message fade-slide-up for smooth appearance */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

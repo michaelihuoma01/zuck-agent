@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "description": "ZURK Agent Command Center — build tools",
+  "scripts": {
+    "icons": "node scripts/generate_icons.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}

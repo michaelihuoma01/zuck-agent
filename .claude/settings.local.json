@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(for file in /Users/magikmike/.claude/projects/-Users-magikmike-Documents-zuck/*.jsonl)",
+      "Bash(do if grep -q '\"\"type\"\":\"\"user\"\"' \"$file\")",
+      "Bash(do if grep -q '\"\"slug\"\"' \"$file\")",
+      "Bash(break)",
+      "Bash(fi)",
+      "Bash(done)"
+    ]
+  }
+}

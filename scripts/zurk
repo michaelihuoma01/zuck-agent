@@ -1,0 +1,131 @@
+#!/bin/bash
+# ZURK CLI — convenience wrapper for common operations
+#
+# Usage:
+#   zurk start          Start in production mode
+#   zurk dev            Start in development mode
+#   zurk stop           Stop the launchd service
+#   zurk restart        Restart the launchd service
+#   zurk status         Show service status and health
+#   zurk logs           Tail application logs
+#   zurk errors         Tail error logs
+#   zurk backup         Run database backup now
+#   zurk health         Manual health check
+#   zurk install        Install as launchd service
+#   zurk uninstall      Remove launchd service
+#   zurk open           Open ZURK in default browser
+
+set -e
+
+# Resolve symlinks to find real project dir
+REAL_SCRIPT="$(readlink -f "$0" 2>/dev/null || realpath "$0" 2>/dev/null || echo "$0")"
+SCRIPT_DIR="$(cd "$(dirname "$REAL_SCRIPT")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+PLIST_NAME="com.zurk.agent-center"
+PLIST_DST="$HOME/Library/LaunchAgents/${PLIST_NAME}.plist"
+UID_NUM=$(id -u)
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+case "${1:-help}" in
+    start)
+        bash "$SCRIPT_DIR/start.sh" "${@:2}"
+        ;;
+    dev)
+        bash "$SCRIPT_DIR/start.sh" --dev "${@:2}"
+        ;;
+    stop)
+        launchctl bootout "gui/$UID_NUM/$PLIST_NAME" 2>/dev/null && \
+            echo -e "${GREEN}Stopped.${NC}" || echo "Service not running."
+        ;;
+    restart)
+        launchctl kickstart -k "gui/$UID_NUM/$PLIST_NAME" 2>/dev/null && \
+            echo -e "${GREEN}Restarted.${NC}" || {
+            echo "Kickstart failed, trying stop/start..."
+            launchctl bootout "gui/$UID_NUM/$PLIST_NAME" 2>/dev/null || true
+            sleep 1
+            launchctl bootstrap "gui/$UID_NUM" "$PLIST_DST" 2>/dev/null
+            echo -e "${GREEN}Restarted.${NC}"
+        }
+        ;;
+    status)
+        echo "Service:"
+        if launchctl list "$PLIST_NAME" &>/dev/null; then
+            PID=$(launchctl list "$PLIST_NAME" 2>/dev/null | awk 'NR==2{print $1}')
+            echo -e "  ${GREEN}Running${NC} (PID: ${PID:-unknown})"
+        else
+            echo -e "  ${RED}Not running${NC}"
+        fi
+        echo ""
+        echo "Health:"
+        RESPONSE=$(curl -sf http://localhost:8000/health 2>/dev/null) && \
+            echo -e "  ${GREEN}Healthy${NC}: $RESPONSE" || \
+            echo -e "  ${RED}Unreachable${NC}"
+        echo ""
+        echo "Database:"
+        DB="$PROJECT_DIR/data/agent_center.db"
+        if [ -f "$DB" ]; then
+            echo "  Size: $(ls -lh "$DB" | awk '{print $5}')"
+        else
+            echo "  Not initialized"
+        fi
+        echo ""
+        echo "Backups:"
+        COUNT=$(ls "$PROJECT_DIR/backups"/agent_center_*.db 2>/dev/null | wc -l | tr -d ' ')
+        echo "  $COUNT backup(s)"
+        ;;
+    logs)
+        tail -f "$PROJECT_DIR/logs/zurk.log" 2>/dev/null || \
+            tail -f "$PROJECT_DIR/logs/zurk-stderr.log" 2>/dev/null || \
+            echo "No log files found."
+        ;;
+    errors)
+        tail -f "$PROJECT_DIR/logs/zurk-error.log" 2>/dev/null || \
+            echo "No error log found."
+        ;;
+    backup)
+        bash "$SCRIPT_DIR/backup_db.sh"
+        ;;
+    health)
+        bash "$SCRIPT_DIR/healthcheck.sh"
+        ;;
+    install)
+        bash "$SCRIPT_DIR/install_service.sh"
+        ;;
+    uninstall)
+        bash "$SCRIPT_DIR/install_service.sh" --remove
+        ;;
+    open)
+        open "http://localhost:8000" 2>/dev/null || \
+        xdg-open "http://localhost:8000" 2>/dev/null || \
+            echo "Open http://localhost:8000 in your browser."
+        ;;
+    help|--help|-h|"")
+        echo ""
+        echo "  ZURK — Agent Command Center CLI"
+        echo ""
+        echo "  Usage: zurk <command>"
+        echo ""
+        echo "  Commands:"
+        echo "    start        Start in production mode"
+        echo "    dev          Start in development mode"
+        echo "    stop         Stop the launchd service"
+        echo "    restart      Restart the launchd service"
+        echo "    status       Show service status and health"
+        echo "    logs         Tail application logs"
+        echo "    errors       Tail error logs"
+        echo "    backup       Run database backup now"
+        echo "    health       Manual health check"
+        echo "    install      Install as launchd service"
+        echo "    uninstall    Remove launchd service"
+        echo "    open         Open in browser"
+        echo ""
+        ;;
+    *)
+        echo "Unknown command: $1"
+        echo "Run 'zurk help' for usage."
+        exit 1
+        ;;
+esac
